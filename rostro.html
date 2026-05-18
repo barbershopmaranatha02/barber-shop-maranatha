@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Tipo de Rostro | Maranatha</title>
+
+
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#f5f5f5;
+text-align:center;
+}
+
+header{
+background:#0E2560;
+padding:40px;
+color:white;
+}
+
+nav{
+background:#003CFF;
+padding:18px;
+}
+
+nav a{
+color:white;
+text-decoration:none;
+margin:0 20px;
+font-size:20px;
+font-weight:bold;
+}
+
+section{
+padding:60px 20px;
+}
+
+h2{
+font-size:45px;
+color:#0E2560;
+}
+
+p{
+font-size:22px;
+margin-top:20px;
+}
+
+video{
+width:80%;
+max-width:500px;
+border:5px solid #0E2560;
+border-radius:20px;
+margin-top:30px;
+}
+
+footer{
+background:#0E2560;
+padding:20px;
+color:white;
+margin-top:40px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>Detector de Rostro</h1>
+</header>
+
+<nav>
+<a href="index.html">Inicio</a>
+<a href="cortes.html">Cortes</a>
+<a href="disenos.html">Diseños</a>
+<a href="barbas.html">Barbas</a>
+<a href="rostro.html">Rostro</a>
+<a href="contacto.html">Contacto</a>
+</nav>
+
+<body>
+
+<h1>Detector de Tipo de Rostro</h1>
+
+<video id="video" autoplay muted></video>
+
+<div id="resultado">
+Detectando rostro...
+</div>
+
+<script>
+
+const video = document.getElementById("video");
+const resultado = document.getElementById("resultado");
+
+async function iniciarCamara(){
+
+const stream = await navigator.mediaDevices.getUserMedia({
+video:true
+});
+
+video.srcObject = stream;
+
+}
+
+async function cargarModelos(){
+
+await faceapi.nets.tinyFaceDetector.loadFromUri(
+'https://justadudewhohacks.github.io/face-api.js/models'
+);
+
+await faceapi.nets.faceLandmark68Net.loadFromUri(
+'https://justadudewhohacks.github.io/face-api.js/models'
+);
+
+}
+
+function analizarRostro(){
+
+setInterval(async ()=>{
+
+const deteccion = await faceapi.detectSingleFace(
+video,
+new faceapi.TinyFaceDetectorOptions()
+).withFaceLandmarks();
+
+if(deteccion){
+
+const jaw = deteccion.landmarks.getJawOutline();
+
+const ancho = jaw[16].x - jaw[0].x;
+
+const alto = jaw[8].y - deteccion.landmarks.getLeftEye()[0].y;
+
+let tipo = "";
+
+if(alto > ancho * 1.5){
+
+tipo = "Rostro Alargado";
+
+}else if(ancho > alto){
+
+tipo = "Rostro Redondo";
+
+}else{
+
+tipo = "Rostro Ovalado";
+
+}
+
+resultado.innerHTML = "Tu tipo de rostro es: " + tipo;
+
+}
+
+},3000);
+
+}
+
+async function iniciar(){
+
+await cargarModelos();
+await iniciarCamara();
+analizarRostro();
+
+}
+
+iniciar();
+
+</script>
+
+<footer>
+<p>© 2026 Barbería Maranatha</p>
+</footer>
+
+</body>
+</html>
