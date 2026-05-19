@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detector de Rostro</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+<style>
+.div1{
+  display: flex;
+  justify-content: center;
+  align-items: center;      
+  gap: 20px;                
+}
+
+.img{
+    width: 50px;
+    height: auto;
+}
+
+body{
+margin:0;
+font-family:Arial;
+background:#f5f5f5;
+}
+
+header{
+background:#0E2560;
+padding:40px;
+text-align:center;
+color:white;
+}
+
+nav{
+background:#163B8C;
+padding:18px;
+text-align:center;
+}
+
+nav a{
+color:white;
+text-decoration:none;
+margin:0 20px;
+font-size:20px;
+font-weight:bold;
+}
+
+section{
+padding:70px 20px;
+text-align:center;
+}
+
+h2{
+font-size:50px;
+color:#0E2560;
+}
+
+form{
+width:80%;
+max-width:500px;
+margin:auto;
+margin-top:30px;
+}
+
+input, textarea{
+width:100%;
+padding:15px;
+margin:10px 0;
+border:1px solid #ccc;
+border-radius:10px;
+}
+
+button{
+background:#0E2560;
+color:white;
+border:none;
+padding:15px 25px;
+border-radius:10px;
+font-size:18px;
+cursor:pointer;
+}
+
+video{
+    width:420px;
+    border-radius:20px;
+    margin-top:20px;
+    border:4px solid #00ffcc;
+}
+
+#resultado{
+    margin-top:20px;
+    font-size:22px;
+    background:#222;
+    padding:20px;
+    border-radius:15px;
+    display:inline-block;
+    width:400px;
+}
+</style>
+</head>
+
+<body>
+
+
+<nav>
+<a href="index.html">Inicio</a>
+<a href="cortes.html">Cortes</a>
+<a href="disenos.html">Diseños</a>
+<a href="barbas.html">Barbas</a>
+<a href="rostro.html">Rostro</a>
+<a href="contacto2.html">Contacto</a>
+</nav>
+
+<h1>📸 Detector de Tipo de Rostro</h1>
+
+<video id="video" autoplay playsinline></video>
+
+<div id="resultado">
+Esperando cámara...
+</div>
+
+<script>
+
+const videoElement = document.getElementById('video');
+const resultado = document.getElementById('resultado');
+
+let ultimoResultado = "";
+
+function distancia(a,b){
+    return Math.sqrt(
+        Math.pow(a.x - b.x,2) +
+        Math.pow(a.y - b.y,2)
+    );
+}
+
+const faceMesh = new FaceMesh({
+    locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+    }
+});
+
+faceMesh.setOptions({
+    maxNumFaces:1,
+    refineLandmarks:true,
+    minDetectionConfidence:0.5,
+    minTrackingConfidence:0.5
+});
+
+faceMesh.onResults((results)=>{
+
+    if(!results.multiFaceLandmarks.length){
+        resultado.innerHTML = "❌ No se detecta rostro";
+        return;
+    }
+
+    const puntos = results.multiFaceLandmarks[0];
+
+    // Anchura aproximada
+    const izquierda = puntos[234];
+    const derecha = puntos[454];
+
+    // Altura aproximada
+    const frente = puntos[10];
+    const barbilla = puntos[152];
+
+    const ancho = distancia(izquierda,derecha);
+    const alto = distancia(frente,barbilla);
+
+    const ratio = alto/ancho;
+
+    let tipo = "";
+    let corte = "";
+
+    if(ratio > 1.55){
+        tipo = "Rostro Alargado";
+        corte = "Fade medio y volumen lateral";
+    }
+    else if(ratio > 1.40){
+        tipo = "Rostro Ovalado";
+        corte = "Quiff, Pompadour o cualquier estilo";
+    }
+    else if(ratio > 1.25){
+        tipo = "Rostro Redondo";
+        corte = "Fade alto con volumen arriba";
+    }
+    else{
+        tipo = "Rostro Cuadrado";
+        corte = "Crew Cut o Undercut";
+    }
+
+    const texto = `
+        <h2>✅ Resultado</h2>
+        <p><b>${tipo}</b></p>
+        <p>✂️ ${corte}</p>
+    `;
+
+    if(texto !== ultimoResultado){
+        resultado.innerHTML = texto;
+        ultimoResultado = texto;
+    }
+
+});
+
+const camera = new Camera(videoElement, {
+    onFrame: async () => {
+        await faceMesh.send({image: videoElement});
+    },
+    width: 640,
+    height: 480
+});
+
+camera.start();
+
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+<style>
+body{
+    margin:0;
+    background:#111;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+}
+
